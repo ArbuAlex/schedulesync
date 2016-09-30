@@ -45,7 +45,7 @@ $ python schedulesync-export.py -id 3135 -p -f 'schedule-61PG.ics' -w 10
     4. Переименовать полученный ключ в client_secret.json
 * Дать доступ к календарю
     5. В учетной записи Google создать новый календарь:
-        - перейти в (https://calendar.google.com/)[календарь]
+        - перейти в [календарь](https://calendar.google.com/)
         - слева "Мои календари" нажать на стрелку
         - Создать новый календарь
     6. Получить идентификатор созданного календаря:
@@ -72,7 +72,11 @@ $ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.goo
 $ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -p -w 10
 ```
 
->***Примечание: *** Параметр `-f` или `--filename` здесь не работает.
+>**Примечание:** Параметр `-f` или `--filename` здесь не работает.
+
+## Замеченные проблемы
+
+При экспорте данных в ics и последующем импорте в Google Календарь, может быть сообщено, что получено 15 событий, а успешно обработано только 10 - эта ситуация связана с подгруппами: два события для подгрупп имеют почти одинаковые данные и поэтому одно не обрабатывается.
 
 ## Tips
 Before usage should be generated OAuth client secret file [here](https://console.developers.google.com/apis/credentials). Algorithm of generating OAuth client secret is similar to [this one](https://github.com/burnash/gspread/wiki/How-to-get-OAuth-access-token-in-console%3F). 
