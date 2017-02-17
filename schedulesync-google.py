@@ -18,9 +18,11 @@ import argparse
 parser = argparse.ArgumentParser(parents=[tools.argparser])
 parser.add_argument('-id', help='ID from JS of oreluniver.ru.', nargs=1, required=True)  # Group or Person ID
 parser.add_argument('-c', '--calendar', help='Google Calendar ID.', nargs=1, required=True)  # Calendar ID
-parser.add_argument('-t', '--teacher',help='Gets schedule for teacher', action='store_const', const=True, default=False)  # Shows that 'id' is Person ID
-parser.add_argument('-e', '--extended',help='Extended headings for events', action='store_const', const=True, default=False)  # Extendend summary for events
-parser.add_argument('-d', '--different',help='Different audiences for subgroups', action='store_const', const=True,
+parser.add_argument('-t', '--teacher', help='Gets schedule for teacher', action='store_const', const=True,
+                    default=False)  # Shows that 'id' is Person ID
+parser.add_argument('-e', '--extended', help='Extended headings for events', action='store_const', const=True,
+                    default=False)  # Extendend summary for events
+parser.add_argument('-d', '--different', help='Different audiences for subgroups', action='store_const', const=True,
                     default=False)  # different audiences for subgroups
 parser.add_argument('-w', '--weeks', type=int, help='How many weeks should be syncronized after current (defalult: 0).',
                     default=0)
@@ -143,11 +145,30 @@ def events_from_schedule(schedule, current_monday):
                 'useDefault': True,
             },
             'location': s['Korpus'] + '-' + s['NumberRoom'],
-            'description': ' '.join(
-                [s['TitleSubject'], '(' + s['TypeLesson'] + ')', s['fam'], s['im'], s['otch'], APPLICATION_NAME])
+            'description':
+                ' '.join(
+                    [s['TitleSubject'],
+                     '(' + s['TypeLesson'] + ')',
+                     s['fam'],
+                     s['im'],
+                     s['otch'],
+                     APPLICATION_NAME]
+                )
             # APPLICATION_NAME added for identifying events added by this program
         }
         result.append(cur_event)
+
+        # find lab works in some audiences
+        if not DIFFERENT_AUDIT:
+            length = len(result)
+            i = 0
+            while i < length - 1:
+                if result[i]['start']['dateTime'] == result[i + 1]['start']['dateTime']:
+                    x = result[i + 1]['summary'].split()
+                    result[i]['summary'] += ', ' + ' '.join(x[2:])
+                    result.pop(i + 1)
+                    length = len(result)
+                i += 1
     return result
 
 
@@ -158,7 +179,7 @@ def main():
     """
     credentials = get_credentials()
     if credentials == None:
-        print 'Wrong name of secret file.'
+        # print 'Wrong name of secret file.'
         print u'Неверное имя secret-файла.'
         return
 
@@ -185,17 +206,7 @@ def main():
             print u'Нет занятий в указаном интервале.'
         else:
             schedule = events_from_schedule(schedule, current_monday)
-            # find lab works in some audiences
-            if not DIFFERENT_AUDIT:
-                length = len(schedule)
-                i = 0
-                while i < length - 1:
-                    if schedule[i]['start']['dateTime'] == schedule[i + 1]['start']['dateTime']:
-                        x = schedule[i + 1]['summary'].split()
-                        schedule[i]['summary'] += ', ' + ' '.join(x[2:])
-                        schedule.pop(i + 1)
-                        length = len(schedule)
-                    i += 1
+
             # Find new events (not added yet)            
             new_events = []
 

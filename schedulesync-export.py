@@ -14,7 +14,7 @@ from icalendar import vDatetime
 
 parser = argparse.ArgumentParser(parents=[tools.argparser])
 parser.add_argument('-id', help='ID from JS of oreluniver.ru.', nargs=1, required=True)  # Group or Person ID
-parser.add_argument('-p', '--person', action='store_const', const=True, default=False)  # Shows that 'id' is Person ID
+parser.add_argument('-t', '--teacher', action='store_const', const=True, default=False)  # Shows that 'id' is Person ID
 parser.add_argument('-w', '--weeks', type=int, help='How many weeks should be syncronized after current (defalult: 0).',
                     default=0)
 parser.add_argument('-f', '--filename', type=str, help='ics-file for writing results', default='schedule.ics')
@@ -22,11 +22,11 @@ flags = parser.parse_args()
 
 FILE_NAME = flags.filename
 UID = flags.id[0]  # Could be retrieved from cookie http://oreluniver.ru/schedule
-PERSON_FLAG = flags.person
+TEACHER = flags.teacher
 QUERY_GROUP = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
-QUERY_PERSON = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
+QUERY_TEACHER = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
 
-QUERY = QUERY_PERSON if (PERSON_FLAG) else QUERY_GROUP
+QUERY = QUERY_TEACHER if (TEACHER) else QUERY_GROUP
 APPLICATION_NAME = 'ScheduleSync'
 TZ = '+03:00'
 
@@ -56,7 +56,7 @@ def events_from_schedule(schedule, current_monday):
     for s in schedule:
         event_name = ' '.join(
             [s['TitleSubject'], '(' + s['TypeLesson'] + ')'])
-        if PERSON_FLAG:
+        if TEACHER:
             event_name = event_name + ' ' + s['title']
         time_shift = time.strptime(TIMETABLE[s['NumberLesson'] - 1][0], '%H:%M')
         lesson_start = datetime.datetime.fromtimestamp(current_monday / 1000)
