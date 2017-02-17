@@ -36,7 +36,6 @@ CALENDAR_ID = flags.calendar[0]
 CLIENT_SECRET_FILE = flags.secret
 TEACHER = flags.teacher
 EXTENDED_TEXT = flags.extended
-DIFFERENT_AUDIT = flags.different
 QUERY_GROUP = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
 QUERY_TEACHER = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
 
@@ -157,18 +156,19 @@ def events_from_schedule(schedule, current_monday):
         result.append(cur_event)
 
         # find lab works in some audiences
-        if not DIFFERENT_AUDIT:
-            length = len(result)
-            i = 0
-            while i < length - 1:
-                start_time_equal = (result[i]['start']['dateTime'] == result[i + 1]['start']['dateTime'])
-                location_equal = (result[i]['location'] == result[i + 1]['location'])
-                if start_time_equal and location_equal:
-                    x = result[i + 1]['summary'].split()
-                    result[i]['summary'] += ', ' + ' '.join(x[2:])
-                    result.pop(i + 1)
-                    length = len(result)
-                i += 1
+        length = len(result)
+        i = 0
+        while i < length - 1:
+            start_time_equal = (result[i]['start']['dateTime'] == result[i + 1]['start']['dateTime'])
+            location_equal = (result[i]['location'] == result[i + 1]['location'])
+            if start_time_equal and location_equal:
+                x = result[i + 1]['summary'].split()
+                result[i]['summary'] += ', ' + ' '.join(x[2:])
+                result.pop(i + 1)
+                length = len(result)
+            i += 1
+
+
     return result
 
 
