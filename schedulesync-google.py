@@ -18,7 +18,10 @@ import argparse
 parser = argparse.ArgumentParser(parents=[tools.argparser])
 parser.add_argument('-id', help='ID from JS of oreluniver.ru.', nargs=1, required=True)  # Group or Person ID
 parser.add_argument('-c', '--calendar', help='Google Calendar ID.', nargs=1, required=True)  # Calendar ID
-parser.add_argument('-p', '--person', action='store_const', const=True, default=False)  # Shows that 'id' is Person ID
+parser.add_argument('-t', '--teacher',help='Gets schedule for teacher', action='store_const', const=True, default=False)  # Shows that 'id' is Person ID
+parser.add_argument('-e', '--extended',help='Extended headings for events', action='store_const', const=True, default=False)  # Extendend summary for events
+parser.add_argument('-d', '--different',help='Different audiences for subgroups', action='store_const', const=True,
+                    default=False)  # different audiences for subgroups
 parser.add_argument('-w', '--weeks', type=int, help='How many weeks should be syncronized after current (defalult: 0).',
                     default=0)
 parser.add_argument('-s', '--secret',
@@ -31,11 +34,13 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 UID = flags.id[0]  # Could be retrieved from reverse-engineered JS-query http://oreluniver.ru/schedule
 CALENDAR_ID = flags.calendar[0]
 CLIENT_SECRET_FILE = flags.secret
-PERSON_FLAG = flags.person
+TEACHER = flags.teacher
+EXTENDED_TEXT = flags.extended
+DIFFERENT_AUDIT = flags.different
 QUERY_GROUP = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
-QUERY_PERSON = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
+QUERY_TEACHER = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
 
-QUERY = QUERY_PERSON if (PERSON_FLAG) else QUERY_GROUP
+QUERY = QUERY_TEACHER if (TEACHER) else QUERY_GROUP
 
 APPLICATION_NAME = 'ScheduleSync'
 TZ = '+03:00'
@@ -110,10 +115,17 @@ def events_from_schedule(schedule, current_monday):
     """
     result = []
     for s in schedule:
-        event_name = ' '.join(
-            [s['TitleSubject'], '(' + s['TypeLesson'] + ')'])
-        if (PERSON_FLAG):
-            event_name = event_name +' ' + s['title']
+        event_name = ''
+        if (EXTENDED_TEXT):
+            event_name = ' '.join([s['TitleSubject'], '(' + s['TypeLesson'] + ')'])
+        else:
+            title_subject = s['TitleSubject'].title().split(' ')
+            for word in title_subject:
+                event_name += word[0]
+            event_name = ' '.join(
+                [event_name, '(' + s['TypeLesson'] + ')', s['fam'], s['im'][0] + '.', s['otch'][0] + '.'])
+        if (TEACHER):
+            event_name = ' '.join([event_name, s['title']])
         time_shift = time.strptime(TIMETABLE[s['NumberLesson'] - 1][0], '%H:%M')
         lesson_start = datetime.datetime.fromtimestamp(current_monday / 1000)
         lesson_start += datetime.timedelta(days=s['DayWeek'] - 1, hours=time_shift.tm_hour, minutes=time_shift.tm_min)
@@ -131,7 +143,9 @@ def events_from_schedule(schedule, current_monday):
                 'useDefault': True,
             },
             'location': s['Korpus'] + '-' + s['NumberRoom'],
-            'description': APPLICATION_NAME  # For identifying events added by this program
+            'description': ' '.join(
+                [s['TitleSubject'], '(' + s['TypeLesson'] + ')', s['fam'], s['im'], s['otch'], APPLICATION_NAME])
+            # APPLICATION_NAME added for identifying events added by this program
         }
         result.append(cur_event)
     return result
@@ -145,6 +159,7 @@ def main():
     credentials = get_credentials()
     if credentials == None:
         print 'Wrong name of secret file.'
+        print u'Неверное имя secret-файла.'
         return
 
     http = credentials.authorize(httplib2.Http())
@@ -161,20 +176,33 @@ def main():
         try:
             added_events = week_events(service, datetime.date.today() + datetime.timedelta(weeks=w))
         except apiclient.errors.HttpError:
-            print 'Wrong calendar id.'
+            # print 'Wrong calendar id.'
+            print u'Неверно указан идентификатор календаря'
             return
 
         if not schedule:
-            print 'No upcoming events found.'
+            # print 'No upcoming events found.'
+            print u'Нет занятий в указаном интервале.'
         else:
             schedule = events_from_schedule(schedule, current_monday)
-
+            # find lab works in some audiences
+            if not DIFFERENT_AUDIT:
+                length = len(schedule)
+                i = 0
+                while i < length - 1:
+                    if schedule[i]['start']['dateTime'] == schedule[i + 1]['start']['dateTime']:
+                        x = schedule[i + 1]['summary'].split()
+                        schedule[i]['summary'] += ', ' + ' '.join(x[2:])
+                        schedule.pop(i + 1)
+                        length = len(schedule)
+                    i += 1
             # Find new events (not added yet)            
             new_events = []
+
             for s in schedule:
                 is_s_new = True
                 for e in added_events:
-                    if 'description' in e.keys() and e['description'] == APPLICATION_NAME:
+                    if 'description' in e.keys() and APPLICATION_NAME in e['description']:
                         if s['start']['dateTime'] == e['start']['dateTime']:
                             if s['summary'] == e['summary']:
                                 is_s_new = False
@@ -186,20 +214,21 @@ def main():
             if new_events != []:
                 for e in new_events:
                     e = service.events().insert(calendarId=CALENDAR_ID, body=e).execute()
-                    print 'Event created: %s' % (e.get('htmlLink'))
+                    # print 'Event created: %s' % (e.get('summary'))
+                    print u'Добавлено занятие: %s' % (e.get('summary'))
 
             # Delete old cancelled events from calendar
             for e in added_events:
                 found = False
                 for s in schedule:
-                    if 'description' in e.keys() and e['description'] == APPLICATION_NAME:
+                    if 'description' in e.keys() and APPLICATION_NAME in e['description']:
                         if s['start']['dateTime'] == e['start']['dateTime']:
                             if s['summary'] == e['summary']:
                                 found = True
                                 break
                 if not found:  # in new schedule
-                    print 'The event was cancelled: '
-                    pprint.pprint(e)
+                    # print 'The event was cancelled %s %s' % (e['summary'], e['start']['dateTime'])
+                    print u'Занятие было отменено %s %s' % (e['summary'], e['start']['dateTime'])
                     service.events().delete(calendarId=CALENDAR_ID, eventId=e['id']).execute()
 
 

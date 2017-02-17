@@ -13,6 +13,19 @@
     - Для преподавателей: `prep`
     - Для студентов: `group`
 
+## Установка библиотек
+
+Для запуска скрипта используется Python 2.7. Библиотеки, используемые в скрипте, по умолчанию отсутствуют, поэтому их надо установить.
+
+- Первым делом нужно установить pip, запустив `pip.py`:
+`sudo python pip.py`
+- Затем устанавливаются отсутствующие библиотеки:
+```
+pip install httplib2
+pip install oauth2client
+pip install --upgrade google-api-tython-client
+```
+
 ## Schedule-Export
 Чтобы запустить утилиту из командной строки (`Unix`), набрать:
 ```bash
@@ -21,19 +34,19 @@ $ python schedulesync-export.py -id XX
 
 Если больше ничего не указывать, скрипт попытается экспортировать расписание студента на неделю в файл `schedule.ics`
 
-Если нужно расписание преподавателя, то в конце строки необходимо добавить параметр `-p` или `--person`:
+Если нужно расписание преподавателя, то в конце строки необходимо добавить параметр `-t` или `--terson`:
 ```bash
-$ python schedulesync-export.py -id 3135 -p
+$ python schedulesync-export.py -id 3135 -t
 ```
 
 ### Дополнительные параметры запуска
 - `-f` или `--filename` указывает, в какой файл сохранять данные (файл перезаписывается или создается), расширение желательно указывать (по умолчанию `schedule.ics`)
 ```
-$ python schedulesync-export.py -id 3135 -p -f 'schedule-61PG.ics'
+$ python schedulesync-export.py -id 3135 -t -f 'schedule-61PG.ics'
 ```
 - `-w` или `--weeks` - количество недель вперед, на которые необходимо получить расписание (по умолчанию только текущая)
 ```
-$ python schedulesync-export.py -id 3135 -p -f 'schedule-61PG.ics' -w 10
+$ python schedulesync-export.py -id 3135 -t -f 'schedule-61PG.ics' -w 10
 ```
 ## ScheduleSync-Google
 
@@ -63,20 +76,29 @@ $ python schedulesync-google.py -id XX -c 40979...0gld2tao4@group.calendar.googl
 
 ### Параметры запуска
 - `-c` или `--calendar` - адрес календаря, в который выгружается расписание **(обязательный параметр)**
-- `-p` или `--person` - указывает, что должно быть загружено расписание преподавателя
+- `-t` или `--teacher` - указывает, что должно быть загружено расписание преподавателя
 ```
-$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -p
+$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t
 ```
 - `-w` или `--weeks` - количество недель вперед, на которые необходимо получить расписание (по умолчанию только текущая)
 ```
-$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -p -w 10
+$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t -w 10
+```
+- `-e` или `--extended` - расширенный заголовок для события, по умолчанию `False` устанавливает заголовок следующего вида **"НП (пр) Фамилия И. О."**, `--extended` создает заголовок вида **"Название предмета целиком (лек)"**
+```
+$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t -w 10 -e
+```
+
+- `-d` или `--different` - запрещает объединять события для подгрупп, предполагая, что занятия происходят в разных аудиториях
+```
+$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t -w 10 -d
 ```
 
 >**Примечание:** Параметр `-f` или `--filename` здесь не работает.
 
 ## Замеченные проблемы
 
-При экспорте данных в ics и последующем импорте в Google Календарь, может быть сообщено, что получено 15 событий, а успешно обработано только 10 - эта ситуация связана с подгруппами: два события для подгрупп имеют почти одинаковые данные и поэтому одно не обрабатывается.
+- При экспорте данных в ics и последующем импорте в Google Календарь, может быть сообщено, что получено 15 событий, а успешно обработано только 10 - эта ситуация связана с подгруппами: два события для подгрупп имеют почти одинаковые данные и поэтому одно не обрабатывается.
 
 ## Tips
 Before usage should be generated OAuth client secret file [here](https://console.developers.google.com/apis/credentials). Algorithm of generating OAuth client secret is similar to [this one](https://github.com/burnash/gspread/wiki/How-to-get-OAuth-access-token-in-console%3F). 
