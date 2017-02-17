@@ -89,11 +89,6 @@ $ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.goo
 $ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t -w 10 -e
 ```
 
-- `-d` или `--different` - запрещает объединять события для подгрупп, предполагая, что занятия происходят в разных аудиториях
-```
-$ python schedulesync-google.py -id 3135 -c 40979...0gld2tao4@group.calendar.google.com -t -w 10 -d
-```
-
 >**Примечание:** Параметр `-f` или `--filename` здесь не работает.
 
 ## Замеченные проблемы

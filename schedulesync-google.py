@@ -22,8 +22,6 @@ parser.add_argument('-t', '--teacher', help='Gets schedule for teacher', action=
                     default=False)  # Shows that 'id' is Person ID
 parser.add_argument('-e', '--extended', help='Extended headings for events', action='store_const', const=True,
                     default=False)  # Extendend summary for events
-parser.add_argument('-d', '--different', help='Different audiences for subgroups', action='store_const', const=True,
-                    default=False)  # different audiences for subgroups
 parser.add_argument('-w', '--weeks', type=int, help='How many weeks should be syncronized after current (defalult: 0).',
                     default=0)
 parser.add_argument('-s', '--secret',
@@ -163,7 +161,9 @@ def events_from_schedule(schedule, current_monday):
             length = len(result)
             i = 0
             while i < length - 1:
-                if result[i]['start']['dateTime'] == result[i + 1]['start']['dateTime']:
+                start_time_equal = (result[i]['start']['dateTime'] == result[i + 1]['start']['dateTime'])
+                location_equal = (result[i]['location'] == result[i + 1]['location'])
+                if start_time_equal and location_equal:
                     x = result[i + 1]['summary'].split()
                     result[i]['summary'] += ', ' + ' '.join(x[2:])
                     result.pop(i + 1)
