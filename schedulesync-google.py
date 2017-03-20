@@ -36,8 +36,8 @@ CALENDAR_ID = flags.calendar[0]
 CLIENT_SECRET_FILE = flags.secret
 TEACHER = flags.teacher
 EXTENDED_TEXT = flags.extended
-QUERY_GROUP = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
-QUERY_TEACHER = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
+QUERY_GROUP = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
+QUERY_TEACHER = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
 
 QUERY = QUERY_TEACHER if (TEACHER) else QUERY_GROUP
 
