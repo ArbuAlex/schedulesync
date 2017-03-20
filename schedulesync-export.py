@@ -23,8 +23,8 @@ flags = parser.parse_args()
 FILE_NAME = flags.filename
 UID = flags.id[0]  # Could be retrieved from cookie http://oreluniver.ru/schedule
 TEACHER = flags.teacher
-QUERY_GROUP = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
-QUERY_TEACHER = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
+QUERY_GROUP = 'http://oreluniver.ru/schedule//%s///%s/printschedule'  # JS-query for students http://oreluniver.ru/schedule
+QUERY_TEACHER = 'http://oreluniver.ru/schedule/%s////%s/printschedule'  # JS-query for teachers http://oreluniver.ru/schedule
 
 QUERY = QUERY_TEACHER if (TEACHER) else QUERY_GROUP
 APPLICATION_NAME = 'ScheduleSync'
